@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('cloning') {
+            steps {
+                git 'https://github.com/Irfankhan0909/mini-project.git'
+            }
+        }
+
+        stage('build stage') {
+            steps {
+                sh '''
+                    cd /var/lib/jenkins/workspace/miniproj
+                    sudo docker build -t irfan890908/projectwork .
+                '''
+            }
+        }
+
+        stage('docker login stage') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'c3979380-77aa-495e-a6b1-64c952eef728',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                }
+            }
+        }
+
+        stage('docker push') {
+            steps {
+                sh 'docker push irfan890908/projectwork:latest'
+            }
+        }
+
+        stage('Deploy the Image in Docker Engine') {
+            steps {
+                sh 'docker run -itd --name proj -p 60:80 irfan890908/projectwork:latest'
+            }
+        }
+    }
+}
